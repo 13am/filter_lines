@@ -7,6 +7,7 @@ import operator
 def parse_options():
     
     userinfo = ''' 
+    
     FILTER LINES v 1.0
     
     Examples:
@@ -31,7 +32,7 @@ def parse_options():
     
     '''
 
-    parser = OptionParser()
+    parser = OptionParser(usage=userinfo)
 
     parser.add_option('--in', type='string', 
                       action='store', dest='infilename', default=False,
@@ -66,8 +67,8 @@ def parse_options():
                       action='store_true', dest='match_all', default=False,
                       help='If multiple fields specified with --column or --filters,'\
                       ' require that all columns  produce a match' \
-                      ' in order for the line itself to be counted as a match (i.e. use logical AND to join the conditions).' \
-                      ' Otherwise by default a match with any condition is sufficient to produce a match (a logical OR is used).'
+                      ' in order for the line itself to be counted as a match (i.e. use logical AND to join the conditions).'\
+                      ' Otherwise by default a match with any condition is sufficient to produce a match (a logical OR is used).')
     
     parser.add_option('--filter-columns', 
                       action='store_true', dest='by_col', default=False,
@@ -95,13 +96,6 @@ def parse_options():
                       ' the output will be' \
                       ' separated by single spaces.')
     
-    parser.add_option('--range',
-                      dest='range',
-                      action='store_true',
-                      default=False,
-                      help='--keep or --remove files contain genomic ranges' \
-                      ' in the tabix format. E.g. "1:400-50000", or "1".')
-
     parser.add_option('--filters',
                       dest='filters',
                       action='store',
@@ -115,6 +109,13 @@ def parse_options():
                       default=False,
                       help='When using --filters: allow partial matches to column names' \
                       ' (if they are unique)')
+
+    parser.add_option('--range',
+                      dest='range',
+                      action='store_true',
+                      default=False,
+                      help='--keep or --remove files contain genomic ranges' \
+                      ' in the tabix format. E.g. "1:400-50000", or "1".')
     
     parser.add_option('--chr-index',
                         dest='chr_index',
