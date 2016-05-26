@@ -104,11 +104,19 @@ def parse_options():
                       ' E.g. --filters "chrom=1,pos>3,pos<500,chrom!=MT".' \
                       ' Recognizes the operators ">", "<", "=", and "!=".')
     
-    parser.add_option('--partial-match', 
+    parser.add_option('--partial-match',
+                      dest='partial_match',
                       action='store_true',
                       default=False,
                       help='When using --filters: allow partial matches to column names' \
                       ' (if they are unique)')
+
+    parser.add_option('--substring-match',
+                      dest='substring_match',
+                      action='store_true',
+                      default=False,
+                      help='When using --keep or --remove: match if one and only one of the keywords' \
+                      ' is a substring of the target.')
 
     parser.add_option('--range',
                       dest='range',
@@ -299,7 +307,14 @@ def match_by_keyword(targets, line, options):
             raise e
         if t != last:
             last = t
-            last_found = t in targets
+            if options.substring_match == False:
+                last_found = last in targets
+            else:
+                n_matches = 0
+                for k in targets.keys():
+                    if k in last:
+                        n_matches += 1
+                last_found = (n_matches == 1)
         found_set.add(last_found)
         
     return found_set
@@ -447,13 +462,14 @@ def main():
         options.filters = filters
                 
     target_cols = []
+    new_header_line = None
     if options.by_col:
         cols = header_line.split(sep)
         for i in range(len(cols)):
             found = cols[i].strip() in targets
             if (found and keep is not False) or (not found and remove is not False):
                 target_cols.append(i)
-        header_line = op_sep.join([cols[i] for i in target_cols])
+        new_header_line = op_sep.join([cols[i] for i in target_cols])
         
     do_keep = keep is not False or options.filters is not False
     do_remove = remove is not False and options.filters is False
@@ -467,7 +483,9 @@ def main():
         matching_fun = match_by_keyword
         
     # write the header to the output first
-    if options.header or options.by_col or options.filters is not False:
+    if options.by_col:
+        output.write(new_header_line + '\n')
+    elif options.header or options.filters is not False:
         output.write(header_line + '\n')
                   
     # then handle the rest of the input lines
