@@ -496,7 +496,7 @@ def main():
         linecounter += 1
         if len(line.strip()) == 0:
             continue
-        ln = line.strip().split(sep)
+        ln = line.rstrip('\n').split(sep)
         if expected_col_n is None:
             expected_col_n = len(ln)
         else:
