@@ -3,6 +3,7 @@
 from optparse import OptionParser
 import sys
 import operator
+import os
 
 def parse_options():
     
@@ -170,7 +171,7 @@ def get_targets(options):
     try:
         input = open(filename, 'r')
     except IOError:
-        print_error('File {} was not found.', vals=(filename))
+        print_error('The file {} was not found.', vals=(filename))
         sys.exit(0)
     targets = {}
     if options.range:
@@ -363,6 +364,13 @@ def main():
     outfilename = options.outfilename
     keep = options.keep
     remove = options.remove
+
+    # make sure keep / remove are existing files
+    for i in (keep, remove):
+        if i != False:
+            if os.path.isfile(i) is False:
+                print_error('The file "{}" does not exist or is not readable.', vals=[i])
+                exit()
     
     # parse the column notation
     if options.column is not None:
