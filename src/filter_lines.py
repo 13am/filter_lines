@@ -5,169 +5,177 @@ import sys
 import operator
 import os
 
+
 def parse_options():
-    
-    userinfo = ''' 
-    
-    FILTER LINES v 1.0
-    
+
+    userinfo = '''
+
+    FILTER LINES
+
     Examples:
-    
-    A. Filter the file "big_file.txt" by keeping all lines which contain any of the words 
-    listed in the file "words.txt". Assume the file to be filtered contains data in columns 
-    separated by spaces. Only use the values in the first column of "big_file.txt" to 
-    look for matches. 
-    
-    > filter_lines.py --in big_file.txt --keep words.txt --sep space --column 1 --out filtered_file.txt
-    
-    B. Filter a file by values in colums. Assume the columns are named on the first (header)
-    line of the input file. Output the header line and lines where either the "weight" column has a value
-    greater than 13, or the value of the "taste" column is "good", or both.
-    
-    > filter_lines.py --in big_file.txt --filters "weight>13,taste=good" --sep space --column 1 --out filtered_file.txt
-    
-    C. As above but now keep only lines where the "weight" column has a value greater than 13 and 
-    the value of the "taste" column is "good".
-    
-    > filter_lines.py  --match-all --in big_file.txt --filters "weight>13,taste=good" --sep space --column 1 --out filtered_file.txt
-    
+
+    A. Filter the file "f1.txt" by keeping all lines which contain any of
+    the words listed in the file "words.txt". Assume the file to be filtered
+    contains data in columns separated by spaces. Only use the values in the
+    first column of "f1.txt" to look for matches.
+
+    > filter_lines.py --in f1.txt --keep words.txt --sep space --column 1 --out filtered_f1.txt
+
+    B. Filter a file by values in colums. Assume the columns are named on the
+    first (header) line of the input file. Output the header line and lines
+    where either the "weight" column has a value greater than 13, or the value
+    of the "taste" column is "good", or both.
+
+    > filter_lines.py --in f1.txt --filters "weight>13,taste=good" --sep space --column 1 --out filtered_f1.txt
+
+    C. As above but now keep only lines where the "weight" column has a value
+    greater than 13 and the value of the "taste" column is "good".
+
+    > filter_lines.py  --match-all --in f1.txt --filters "weight>13,taste=good" --sep space --column 1 --out filtered_f1.txt
+
     '''
 
     parser = OptionParser(usage=userinfo)
 
-    parser.add_option('--in', type='string', 
+    parser.add_option('--in', type='string',
                       action='store', dest='infilename', default=False,
                       help='The file to filter. If not specified, input \
                       is read from STDIN')
 
-    parser.add_option('--out', type='string', 
+    parser.add_option('--out', type='string',
                       action='store', dest='outfilename', default=False,
                       help='Name for the file where the target lines are written. \
                       If not specified, output is written to STDOUT')
-    
-    parser.add_option('--keep', type='string', 
+
+    parser.add_option('--keep', type='string',
                       action='store', dest='keep', default=False,
                       help='Keep lines containing a value listed in this file.')
-    
-    parser.add_option('--remove', type='string', 
-                      action='store', dest='remove', default=False, 
+
+    parser.add_option('--remove', type='string',
+                      action='store', dest='remove', default=False,
                       help='Remove lines containing a value listed in this file.')
-    
+
     parser.add_option('--column',
                       action='store', dest='column',
-                      help='Specify the column to be searched for the values when using'\
-                      ' --keep or --remove.' \
-                      ' The leftmost is column 1 etc.'\
-                      ' Multiple columns can be given by separating the column indexes'\
-                      ' with a comma,' \
-                      ' e.g. --column 1,2,5 would only search in the first,'\
-                      ' second, and fifth columns and' \
+                      help='Specify the column to be searched for the values when using'
+                      ' --keep or --remove.'
+                      ' The leftmost is column 1 etc.'
+                      ' Multiple columns can be given by separating the column indexes'
+                      ' with a comma,'
+                      ' e.g. --column 1,2,5 would only search in the first,'
+                      ' second, and fifth columns and'
                       ' ignore matches elsewhere.')
-    
-    parser.add_option('--match-all', 
+
+    parser.add_option('--match-all',
                       action='store_true', dest='match_all', default=False,
-                      help='If multiple fields specified with --column or --filters,'\
-                      ' require that all columns  produce a match' \
-                      ' in order for the line itself to be counted as a match (i.e. use logical AND to join the conditions).'\
+                      help='If multiple fields specified with --column or --filters,'
+                      ' require that all columns  produce a match'
+                      ' in order for the line itself to be counted as a match (i.e. use logical AND to join the conditions).'
                       ' Otherwise by default a match with any condition is sufficient to produce a match (a logical OR is used).')
-    
-    parser.add_option('--filter-columns', 
+
+    parser.add_option('--filter-columns',
                       action='store_true', dest='by_col', default=False,
-                      help='Filter by column names (instead of values on rows) when using'\
+                      help='Filter by column names (instead of values on rows) when using'
                       ' --keep or --remove.')
-    
-    parser.add_option('--excluded-out', type='string', 
+
+    parser.add_option('--excluded-out', type='string',
                       action='store', dest='outfilename_ex', default=False,
-                      help='Name for the file where the excluded lines are written.' \
+                      help='Name for the file where the excluded lines are written.'
                       ' If not specified, they are discarded.')
-    
+
     parser.add_option('--header', action='store_true', dest='header', default=False,
                       help='If specified, do not filter the first line of the file.')
-    
-    parser.add_option('--sep', type='string', 
+
+    parser.add_option('--sep', type='string',
                       action='store', dest='sep', default='tab',
-                      help='Use this as field separator.' \
-                      ' The default value is tab.' \
-                      ' Possible values are "tab", "space", "whitespace", or any string' \
-                      ' such as "this script is awesome" or ";" enclosed in quotes.' \
-                      ' If you use the' \
-                      ' "whitespace" keyword as the separator, continuous stretches of' \
-                      ' any whitespace' \
-                      ' characters will be used as field separators in the input and' \
-                      ' the output will be' \
+                      help='Use this as field separator.'
+                      ' The default value is tab.'
+                      ' Possible values are "tab", "space", "whitespace", or any string'
+                      ' such as "this script is awesome" or ";" enclosed in quotes.'
+                      ' If you use the'
+                      ' "whitespace" keyword as the separator, continuous stretches of'
+                      ' any whitespace'
+                      ' characters will be used as field separators in the input and'
+                      ' the output will be'
                       ' separated by single spaces.')
-    
+
     parser.add_option('--filters',
                       dest='filters',
                       action='store',
                       default=False,
-                      help='Filter input lines by values in named columns.' \
-                      ' E.g. --filters "chrom=1,pos>3,pos<500,chrom!=MT".' \
+                      help='Filter input lines by values in named columns.'
+                      ' E.g. --filters "chrom=1,pos>3,pos<500,chrom!=MT".'
                       ' Recognizes the operators ">", "<", "=", and "!=".')
-    
+
+    parser.add_option('--ignore-case',
+                      dest='ignore_case',
+                      action='store_true',
+                      default=False,
+                      help='When using --keep or --remove: ignore case when '
+                      'comparing letters, e.g. match "cat" to "CAT"')
+
     parser.add_option('--partial-match',
                       dest='partial_match',
                       action='store_true',
                       default=False,
-                      help='When using --filters: allow partial matches to column names' \
+                      help='When using --filters: allow partial matches to column names'
                       ' (if they are unique)')
 
     parser.add_option('--substring-match',
                       dest='substring_match',
                       action='store_true',
                       default=False,
-                      help='When using --keep or --remove: match if one and only one of the keywords' \
+                      help='When using --keep or --remove: match if one and only one of the keywords'
                       ' is a substring of the target.')
 
     parser.add_option('--range',
                       dest='range',
                       action='store_true',
                       default=False,
-                      help='--keep or --remove files contain genomic ranges' \
+                      help='--keep or --remove files contain genomic ranges'
                       ' in the tabix format. E.g. "1:400-50000", or "1".')
-    
+
     parser.add_option('--chr-index',
-                        dest='chr_index',
-                        action='store',
-                        type='int',
-                        default=-666,
-                        help='Index for the chromosome column. Used when' \
-                        ' specifying --range.')
+                      dest='chr_index',
+                      action='store',
+                      type='int',
+                      default=-666,
+                      help='Index for the chromosome column. Used when'
+                      ' specifying --range.')
 
     parser.add_option('--pos-index',
-                        dest='pos_index',
-                        action='store',
-                        type='int',
-                        default=-666,
-                        help='Index for the base pair position column.' \
-                        ' Used when specifying --range.')
+                      dest='pos_index',
+                      action='store',
+                      type='int',
+                      default=-666,
+                      help='Index for the base pair position column.'
+                      ' Used when specifying --range.')
 
     parser.add_option('--assume-chr',
-                        dest='assume_chr',
-                        action='store',
-                        default=False,
-                        help='Use this as the chromosome code in the input.' \
-                        ' Used when specifying --range.')
-    
-    (options, args)=parser.parse_args()    
-            
+                      dest='assume_chr',
+                      action='store',
+                      default=False,
+                      help='Use this as the chromosome code in the input.'
+                      ' Used when specifying --range.')
+
+    (options, args) = parser.parse_args()
+
     if not (options.keep or options.remove or options.filters):
         print_error('Please specify either --keep, --remove, or --filters')
         sys.exit(0)
-        
+
     return options
-    
-    
+
+
 def print_error(msg, vals=[]):
     m = 'Error: ' + msg.format(*vals).strip() + '\n'
     sys.stderr.write(m)
 
 
 def get_targets(options):
-    if options.keep == False:
+    filename = options.keep
+    if filename is False:
         filename = options.remove
-    else:
-        filename = options.keep
     try:
         input = open(filename, 'r')
     except IOError:
@@ -190,19 +198,22 @@ def get_targets(options):
             except KeyError:
                 targets[chrom] = [(start, end)]
         for chrom in targets:
-            targets[chrom].sort(key = lambda x: x[0]) # sort by start position
+            targets[chrom].sort(key=lambda x: x[0])  # sort by start position
     else:
         for line in input:
-            targets[line.strip()] = 0
+            line = line.strip()
+            if options.ignore_case:
+                line = line.lower()
+            targets[line] = 0
     input.close()
-    
+
     return targets
 
 
 def get_indexes(header_line, keys, options):
     indexes = {}
     header = header_line.split(options.sep)
-    
+
     for i in enumerate(header):
         for k in keys:
             if options.partial_match:
@@ -214,7 +225,7 @@ def get_indexes(header_line, keys, options):
                     indexes[k].append(i[0])
                 except KeyError:
                     indexes[k] = [i[0]]
-    
+
     unique_indexes = {}
     for k, i in indexes.items():
         u = set(i)
@@ -223,7 +234,7 @@ def get_indexes(header_line, keys, options):
             sys.exit(0)
         else:
             unique_indexes[k] = list(u)[0]
-    
+
     return unique_indexes
 
 
@@ -235,24 +246,24 @@ def float_or_return(i):
 
 
 class Filters:
-    operators = {'!=':operator.ne, 
-                 '=':operator.eq, 
-                 '<':operator.lt, 
-                 '>':operator.gt}
-    
-    formatters = {'!=':float_or_return, 
-                 '=':float_or_return, 
-                 '<':float, 
-                 '>':float}
+    operators = {'!=': operator.ne,
+                 '=': operator.eq,
+                 '<': operator.lt,
+                 '>': operator.gt}
+
+    formatters = {'!=': float_or_return,
+                  '=': float_or_return,
+                  '<': float,
+                  '>': float}
 
 
 def build_filters(filters):
     raw_filters = filters.split(',')
-    
+
     ready_filters = {}
     for f in Filters.operators.keys():
         ready_filters[f] = {}
-        
+
     for f in ready_filters.keys():
         for r in raw_filters:
             if f == '=' and '!=' in r:
@@ -264,18 +275,18 @@ def build_filters(filters):
                     ready_filters[f][filter_key].append(filter_value)
                 except KeyError:
                     ready_filters[f][filter_key] = [filter_value]
-                
+
     for f, targets in ready_filters.items():
         for k, v in targets.items():
             sys.stderr.write('# filter: {} {} {}\n'.format(k, f, v))
-            
+
     return ready_filters
 
 
-def match_by_filters(targets, line, options):    
+def match_by_filters(targets, line, options):
     ln = line.strip().split(options.sep)
     found_set = set()
-    
+
     # options.filters: dict of dicts
     # e.g. {filter_operator:{line_index:[target_values]}}
     for filter in iter(options.filters):
@@ -289,7 +300,7 @@ def match_by_filters(targets, line, options):
                     found_set.add(True)
                 else:
                     found_set.add(False)
-                    
+
     return found_set
 
 
@@ -304,11 +315,13 @@ def match_by_keyword(targets, line, options):
     for column in cols:
         try:
             t = ln[column].strip()
+            if options.ignore_case:
+                t = t.lower()
         except IndexError as e:
             raise e
         if t != last:
             last = t
-            if options.substring_match == False:
+            if options.substring_match is False:
                 last_found = last in targets
             else:
                 n_matches = 0
@@ -317,7 +330,7 @@ def match_by_keyword(targets, line, options):
                         n_matches += 1
                 last_found = (n_matches == 1)
         found_set.add(last_found)
-        
+
     return found_set
 
 
@@ -328,7 +341,7 @@ def match_by_range(targets, line, options):
     else:
         chrom = options.assume_chr
     pos = int(ln[options.pos_index])
-    
+
     if chrom in targets:
         for r in targets[chrom]:
             if r[0] is None or r[1] is None:
@@ -339,7 +352,7 @@ def match_by_range(targets, line, options):
                 return set([True])
             else:
                 continue
-                
+
     return set([False])
 
 
@@ -353,7 +366,7 @@ def exit(*filehandles):
             f.close()
         except:
             pass
-            
+
     sys.exit(0)
 
 
@@ -367,21 +380,23 @@ def main():
 
     # make sure keep / remove are existing files
     for i in (keep, remove):
-        if i != False:
+        if i is not False:
             if os.path.isfile(i) is False:
-                print_error('The file "{}" does not exist or is not readable.', vals=[i])
+                msg = 'The file "{}" does not exist or is not readable.'
+                print_error(msg, vals=[i])
                 exit()
-    
+
     # parse the column notation
     if options.column is not None:
-        options.column = [int(i.strip())-1 for i in options.column.split(',')]
-        
+        options.column = [
+            int(i.strip()) - 1 for i in options.column.split(',')]
+
     # move the column indexes to 0-based indexing
     if options.pos_index is not False:
         options.pos_index -= 1
     if options.chr_index is not False:
         options.chr_index -= 1
-    
+
     # set the delimiters
     sep = options.sep
     op_sep = sep
@@ -395,13 +410,13 @@ def main():
         sep = None
         op_sep = ' '
     options.sep = sep
-            
+
     linecounter = 0
     n_removed = 0
-    n_kept = 0    
-    
+    n_kept = 0
+
     input = None
-    if infilename == False:
+    if infilename is False:
         input = sys.stdin
         infilename = 'STDIN'
     else:
@@ -410,39 +425,39 @@ def main():
         except IOError:
             print_error('File {} was not found.', vals=[infilename])
             sys.exit(0)
-                
+
     output = None
-    if outfilename == False:
+    if outfilename is False:
         output = sys.stdout
     else:
         try:
             output = open(outfilename, 'w')
         except:
-            print_error('File {} could not be opened for writing output.', 
+            print_error('File {} could not be opened for writing output.',
                         vals=[outfilename])
             exit(input)
-    
+
     output_ex = None
-    if options.outfilename_ex != False:
+    if options.outfilename_ex is not False:
         try:
             output_ex = open(options.outfilename_ex, 'w')
         except:
-            print_error('File {} could not be opened for writing output.', 
+            print_error('File {} could not be opened for writing output.',
                         vals=[options.outfilename_ex])
             exit(input, output, output_ex)
-            
+
     # handle the header
     header_line = None
-    if header == True or options.by_col or options.filters is not False:
+    if header is True or options.by_col or options.filters is not False:
         linecounter += 1
         n_kept += 1
         header_line = input.readline().strip()
-        
+
     # if specifying --keep or --remove, read the corresponding files
     targets = None
     if options.filters is False:
         targets = get_targets(options)
-        if targets == None:
+        if targets is None:
             sys.exit(0)
     else:
         # make the filter dict using column names as keys
@@ -450,16 +465,17 @@ def main():
         all_filters = []
         for i in options.filters:
             all_filters += options.filters[i].keys()
-        
+
         # make sure that all specified column names are in the header
         filter_indexes = get_indexes(header_line, all_filters, options)
         for k in all_filters:
             if k not in filter_indexes:
-                msg1 = 'The --filters key {} was not found on the header line.'.format(k)
+                msg1 = 'The --filters key {} was not found on the header line.'.format(
+                    k)
                 msg2 = 'Maybe you forgot to specify the correct --sep?'
                 print_error(msg1 + '\n' + msg2, vals=[k])
                 exit(input, output, output_ex)
-                
+
         # convert the keys from column names to column indexes
         filters = {}
         for f in iter(options.filters):
@@ -468,7 +484,7 @@ def main():
                 i = filter_indexes[k]
                 filters[f][i] = v
         options.filters = filters
-                
+
     target_cols = []
     new_header_line = None
     if options.by_col:
@@ -478,10 +494,10 @@ def main():
             if (found and keep is not False) or (not found and remove is not False):
                 target_cols.append(i)
         new_header_line = op_sep.join([cols[i] for i in target_cols])
-        
+
     do_keep = keep is not False or options.filters is not False
     do_remove = remove is not False and options.filters is False
-    
+
     # choose the matching function
     if options.filters is not False:
         matching_fun = match_by_filters
@@ -489,13 +505,13 @@ def main():
         matching_fun = match_by_range
     else:
         matching_fun = match_by_keyword
-        
+
     # write the header to the output first
     if options.by_col:
         output.write(new_header_line + '\n')
     elif options.header or options.filters is not False:
         output.write(header_line + '\n')
-                  
+
     # then handle the rest of the input lines
     expected_col_n = None
     if header_line is not None:
@@ -533,7 +549,7 @@ def main():
                             found = True
                     else:
                         found = True
-                
+
                 if (found and do_keep) or (not found and do_remove):
                     output.write(line)
                     n_kept += 1
@@ -541,15 +557,15 @@ def main():
                     if options.outfilename_ex != False:
                         output_ex.write(line)
                     n_removed += 1
-                    
+
             except IndexError:
                 msg = 'error: the file {} has only {} columns on line {},' \
-                ' which is less than the minimum amount of' \
-                ' columns implied by the --column value'
+                    ' which is less than the minimum amount of' \
+                    ' columns implied by the --column value'
                 vals = (infilename, len(ln), linecounter)
                 print_error(msg + '\n' + line, vals=vals)
                 exit(input, output, output_ex)
-                
+
     # print final info
     if do_remove:
         action = 'removed'
@@ -560,9 +576,8 @@ def main():
     msg = 'done, {} {} of the {} lines in {}'
     vals = (action, n, linecounter, infilename)
     sys.stderr.write(msg.format(*vals) + '\n')
-    
+
     exit(input, output, output_ex)
 
 if __name__ == '__main__':
     main()
-
