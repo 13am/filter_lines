@@ -114,6 +114,12 @@ def parse_options():
                       help='When using --keep or --remove: ignore case when '
                       'comparing letters, e.g. match "cat" to "CAT"')
 
+    parser.add_option('--debug',
+                      dest='debug',
+                      action='store_true',
+                      default=False,
+                      help='Turn debugging reports on')
+
     parser.add_option('--partial-match',
                       dest='partial_match',
                       action='store_true',
@@ -172,6 +178,11 @@ def print_error(msg, vals=[]):
     sys.stderr.write(m)
 
 
+def print_debug(msg, vals=[]):
+    m = 'Debug: ' + msg.format(*vals).strip() + '\n'
+    sys.stderr.write(m)
+
+
 def get_targets(options):
     filename = options.keep
     if filename is False:
@@ -212,7 +223,7 @@ def get_targets(options):
 
 def get_indexes(header_line, keys, options):
     indexes = {}
-    header = header_line.split(options.sep)
+    header = split_line(header_line, options)
 
     for i in enumerate(header):
         for k in keys:
@@ -284,7 +295,7 @@ def build_filters(filters):
 
 
 def match_by_filters(targets, line, options):
-    ln = line.strip().split(options.sep)
+    ln = split_line(line, options)
     found_set = set()
 
     # options.filters: dict of dicts
@@ -296,10 +307,14 @@ def match_by_filters(targets, line, options):
         for i, vals in cols:
             i = ln[i]
             for v in vals:
-                if oprtor(fmter(i), fmter(v)):
+                match = oprtor(fmter(i), fmter(v))
+                if match:
                     found_set.add(True)
                 else:
                     found_set.add(False)
+                if options.debug:
+                    msg = '"{}" "{}" "{}" {}'
+                    print_debug(msg, vals=(i, filter, v, match))
 
     return found_set
 
@@ -307,7 +322,7 @@ def match_by_filters(targets, line, options):
 def match_by_keyword(targets, line, options):
     last = None
     last_found = None
-    ln = line.split(options.sep)
+    ln = split_line(line, options)
     found_set = set()
     cols = options.column
     if cols is None:
@@ -335,7 +350,7 @@ def match_by_keyword(targets, line, options):
 
 
 def match_by_range(targets, line, options):
-    ln = line.split(options.sep)
+    ln = split_line(line, options)
     if options.assume_chr is False:
         chrom = ln[options.chr_index]
     else:
@@ -368,6 +383,10 @@ def exit(*filehandles):
             pass
 
     sys.exit(0)
+
+
+def split_line(line, options):
+    return line.strip('\n').split(options.sep)
 
 
 def main():
@@ -451,7 +470,7 @@ def main():
     if header is True or options.by_col or options.filters is not False:
         linecounter += 1
         n_kept += 1
-        header_line = input.readline().strip()
+        header_line = input.readline()
 
     # if specifying --keep or --remove, read the corresponding files
     targets = None
@@ -488,7 +507,7 @@ def main():
     target_cols = []
     new_header_line = None
     if options.by_col:
-        cols = header_line.split(sep)
+        cols = split_line(header_line, options)
         for i in range(len(cols)):
             found = cols[i].strip() in targets
             if (found and keep is not False) or (not found and remove is not False):
@@ -510,17 +529,17 @@ def main():
     if options.by_col:
         output.write(new_header_line + '\n')
     elif options.header or options.filters is not False:
-        output.write(header_line + '\n')
+        output.write(header_line.rstrip('\n') + '\n')
 
     # then handle the rest of the input lines
     expected_col_n = None
     if header_line is not None:
-        expected_col_n = len(header_line.strip().split(options.sep))
+        expected_col_n = len(split_line(header_line, options))
     for line in input:
         linecounter += 1
         if len(line.strip()) == 0:
             continue
-        ln = line.rstrip('\n').split(sep)
+        ln = split_line(line, options)
         if expected_col_n is None:
             expected_col_n = len(ln)
         else:
